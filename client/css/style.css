@@ -1,0 +1,22 @@
+.sidebar {
+  transition: all 0.3s;
+}
+.chat-bubble {
+  max-width: 80%;
+}
+.progress-ring {
+  transform: rotate(-90deg);
+}
+.progress-ring-circle {
+  stroke-dasharray: 314;
+  stroke-dashoffset: 314;
+  animation: progress 1.5s ease-in-out forwards;
+}
+@keyframes progress {
+  from {
+    stroke-dashoffset: 314;
+  }
+  to {
+    stroke-dashoffset: var(--dashoffset);
+  }
+}
