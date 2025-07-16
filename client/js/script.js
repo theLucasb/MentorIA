@@ -9,7 +9,7 @@ document.getElementById('login-btn').addEventListener('click', async function ()
     const email = document.querySelector('input[type="email"]').value;
     const senha = document.querySelector('input[type="password"]').value;
 
-    const res = await fetch('http://localhost:5000/api/auth/login', {
+    const res = await fetch('http://localhost:5500/api/auth/login', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
