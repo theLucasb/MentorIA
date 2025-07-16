@@ -5,6 +5,30 @@ document.getElementById('login-btn').addEventListener('click', function () {
     document.getElementById('dashboard').classList.remove('hidden');
 });
 
+document.getElementById('login-btn').addEventListener('click', async function () {
+    const email = document.querySelector('input[type="email"]').value;
+    const senha = document.querySelector('input[type="password"]').value;
+
+    const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, senha })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+        alert(`Bem-vindo, ${data.user.nome}!`);
+        localStorage.setItem('token', data.token); // guardar token
+        // redirecionar ou mostrar dashboard
+    } else {
+        alert(data.msg || 'Erro no login');
+    }
+});
+
+
 // Toggle user type (student/professor)
 document.getElementById('toggle-user-type').addEventListener('click', function () {
     this.textContent = this.textContent === 'Sou professor' ? 'Sou aluno' : 'Sou professor';

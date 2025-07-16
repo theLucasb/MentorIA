@@ -1,22 +1,18 @@
-// server/server.js
-const express = require("express");
-const cors = require("cors");
-require("dotenv").config();
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const authRoutes = require('./routes/auth');
+const cursoRoutes = require('./routes/cursos');
+const verifyToken = require('./middleware/verifyToken');
 
+dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Rotas básicas
-app.get("/", (req, res) => {
-  res.send("MentorIA API rodando ✅");
-});
-
-// Importar rotas reais (em breve)
-// const userRoutes = require("./routes/users");
-// app.use("/api/users", userRoutes);
+// Rotas
+app.use('/api/auth', authRoutes);
+app.use('/api/cursos', verifyToken, cursoRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
