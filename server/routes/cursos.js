@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { listarCursos, criarCurso } = require('../controllers/cursoController');
+const verifyToken = require('../middleware/verifyToken');
 
-router.get('/', listarCursos);
-router.post('/', criarCurso);
+router.get('/', verifyToken, (req, res) => {
+  res.json({ msg: 'Acesso permitido a usuários autenticados', user: req.user });
+});
 
 module.exports = router;

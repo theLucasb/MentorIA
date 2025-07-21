@@ -1,3 +1,6 @@
+require('dotenv').config();
+console.log('Conectando com usuário:', process.env.DB_USER);
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');

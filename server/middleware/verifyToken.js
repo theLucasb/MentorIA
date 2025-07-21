@@ -1,14 +1,17 @@
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
+const JWT_SECRET = process.env.JWT_SECRET;
 
-module.exports = (req, res, next) => {
-  const token = req.headers['authorization'];
+const verifyToken = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ msg: 'Token não fornecido.' });
 
-  if (!token) return res.status(403).json({ msg: 'Token não fornecido' });
-
-  jwt.verify(token.split(' ')[1], process.env.JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(401).json({ msg: 'Token inválido' });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
     next();
-  });
+  } catch (err) {
+    return res.status(401).json({ msg: 'Token inválido' });
+  }
 };
+
+module.exports = verifyToken;

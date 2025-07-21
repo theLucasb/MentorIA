@@ -3,17 +3,37 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 exports.registerUser = async (req, res) => {
-  const { nome, email, senha, tipo } = req.body;
-  if (!nome || !email || !senha || !tipo) return res.status(400).json({ msg: 'Preencha todos os campos' });
+  try {
+    const { nome, email, senha, tipo } = req.body;
 
-  const hashedPassword = await bcrypt.hash(senha, 10);
+    if (!nome || !email || !senha || !tipo) {
+      return res.status(400).json({ msg: 'Preencha todos os campos' });
+    }
 
-  const sql = 'INSERT INTO users (nome, email, senha, tipo) VALUES (?, ?, ?, ?)';
-  db.query(sql, [nome, email, hashedPassword, tipo], (err, result) => {
-    if (err) return res.status(500).json({ msg: 'Erro ao cadastrar', error: err });
-    res.status(201).json({ msg: 'Usuário cadastrado com sucesso' });
-  });
+    // Verifique se tipo é válido
+    if (!['aluno', 'professor'].includes(tipo)) {
+      return res.status(400).json({ msg: 'Tipo inválido' });
+    }
+
+    // Criptografa a senha
+    const hashedPassword = await bcrypt.hash(senha, 10);
+
+    // Insere no banco
+    const query = 'INSERT INTO users (nome, email, senha, tipo, criado_em) VALUES (?, ?, ?, ?, NOW())';
+
+    db.query(query, [nome, email, hashedPassword, tipo], (err, result) => {
+      if (err) {
+        console.error('Erro ao inserir usuário:', err);
+        return res.status(500).json({ msg: 'Erro no servidor ao cadastrar usuário' });
+      }
+      return res.status(201).json({ msg: 'Usuário cadastrado com sucesso' });
+    });
+  } catch (error) {
+    console.error('Erro catch:', error);
+    res.status(500).json({ msg: 'Erro inesperado no servidor' });
+  }
 };
+
 
 exports.loginUser = (req, res) => {
   const { email, senha } = req.body;
