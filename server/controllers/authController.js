@@ -1,53 +1,52 @@
-const db = require('../db');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+// server/controllers/authController.js
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { users } = require("../models/mockDB");
 
-exports.registerUser = async (req, res) => {
-  try {
-    const { nome, email, senha, tipo } = req.body;
+function gerarToken(user) {
+  return jwt.sign(
+    { id: user.id, role: user.role, name: user.name, email: user.email },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES || "1d" }
+  );
+}
 
-    if (!nome || !email || !senha || !tipo) {
-      return res.status(400).json({ msg: 'Preencha todos os campos' });
-    }
-
-    // Verifique se tipo é válido
-    if (!['aluno', 'professor'].includes(tipo)) {
-      return res.status(400).json({ msg: 'Tipo inválido' });
-    }
-
-    // Criptografa a senha
-    const hashedPassword = await bcrypt.hash(senha, 10);
-
-    // Insere no banco
-    const query = 'INSERT INTO users (nome, email, senha, tipo, criado_em) VALUES (?, ?, ?, ?, NOW())';
-
-    db.query(query, [nome, email, hashedPassword, tipo], (err, result) => {
-      if (err) {
-        console.error('Erro ao inserir usuário:', err);
-        return res.status(500).json({ msg: 'Erro no servidor ao cadastrar usuário' });
-      }
-      return res.status(201).json({ msg: 'Usuário cadastrado com sucesso' });
-    });
-  } catch (error) {
-    console.error('Erro catch:', error);
-    res.status(500).json({ msg: 'Erro inesperado no servidor' });
+exports.register = async (req, res) => {
+  const { name, email, password, role = "aluno" } = req.body;
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: "Preencha todos os campos" });
   }
+
+  if (users.find((u) => u.email === email)) {
+    return res.status(409).json({ error: "Email já cadastrado" });
+  }
+
+  const hash = await bcrypt.hash(password, 10);
+  const newUser = {
+    id: users.length + 1,
+    name,
+    email,
+    password_hash: hash,
+    role,
+  };
+  users.push(newUser);
+
+  const token = gerarToken(newUser);
+  return res.status(201).json({ user: newUser, token });
 };
 
+exports.login = async (req, res) => {
+  const { email, password } = req.body;
+  const user = users.find((u) => u.email === email);
+  if (!user) return res.status(401).json({ error: "Credenciais inválidas" });
 
-exports.loginUser = (req, res) => {
-  const { email, senha } = req.body;
-  if (!email || !senha) return res.status(400).json({ msg: 'Informe e-mail e senha' });
+  const ok = await bcrypt.compare(password, user.password_hash);
+  if (!ok) return res.status(401).json({ error: "Credenciais inválidas" });
 
-  const sql = 'SELECT * FROM users WHERE email = ?';
-  db.query(sql, [email], async (err, results) => {
-    if (err || results.length === 0) return res.status(401).json({ msg: 'Usuário não encontrado' });
+  const token = gerarToken(user);
+  return res.json({ user, token });
+};
 
-    const user = results[0];
-    const isMatch = await bcrypt.compare(senha, user.senha);
-    if (!isMatch) return res.status(401).json({ msg: 'Senha incorreta' });
-
-    const token = jwt.sign({ id: user.id, tipo: user.tipo }, process.env.JWT_SECRET, { expiresIn: '2h' });
-    res.status(200).json({ token, user: { id: user.id, nome: user.nome, tipo: user.tipo } });
-  });
+exports.me = (req, res) => {
+  return res.json({ user: req.user });
 };

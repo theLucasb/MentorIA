@@ -1,19 +1,25 @@
-const db = require('../db');
+const { cursos, materiais } = require("../models/mockDB");
 
-exports.listarCursos = (req, res) => {
-  db.query('SELECT * FROM cursos', (err, results) => {
-    if (err) return res.status(500).json({ msg: 'Erro ao buscar cursos' });
-    res.status(200).json(results);
-  });
+exports.getCursos = (req, res) => {
+  res.json(cursos);
 };
 
-exports.criarCurso = (req, res) => {
-  const { titulo, descricao } = req.body;
-  const professor_id = req.user.id;
-  if (!titulo) return res.status(400).json({ msg: 'Título é obrigatório' });
+exports.getCursoById = (req, res) => {
+  const curso = cursos.find((c) => c.id === parseInt(req.params.id));
+  if (!curso) return res.status(404).json({ error: "Curso não encontrado" });
 
-  db.query('INSERT INTO cursos (titulo, descricao, professor_id) VALUES (?, ?, ?)', [titulo, descricao, professor_id], (err, result) => {
-    if (err) return res.status(500).json({ msg: 'Erro ao criar curso', err });
-    res.status(201).json({ msg: 'Curso criado com sucesso', id: result.insertId });
-  });
+  const cursoMateriais = materiais.filter((m) => m.curso_id === curso.id);
+  res.json({ ...curso, materiais: cursoMateriais });
+};
+
+exports.addCurso = (req, res) => {
+  const { titulo, descricao } = req.body;
+  const novoCurso = {
+    id: cursos.length + 1,
+    titulo,
+    descricao,
+    autor_id: req.user.id,
+  };
+  cursos.push(novoCurso);
+  res.status(201).json(novoCurso);
 };

@@ -1,9 +1,11 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const verifyToken = require('../middleware/verifyToken');
+const { getCursos, getCursoById, addCurso } = require("../controllers/cursoController");
+const verifyToken = require("../middleware/verifyToken");
+const { requireRole } = require("../middleware/authMiddleware");
 
-router.get('/', verifyToken, (req, res) => {
-  res.json({ msg: 'Acesso permitido a usuários autenticados', user: req.user });
-});
+router.get("/", getCursos);
+router.get("/:id", getCursoById);
+router.post("/", verifyToken, requireRole("professor"), addCurso);
 
 module.exports = router;

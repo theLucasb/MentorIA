@@ -1,21 +1,26 @@
+// server/server.js
 require('dotenv').config();
-console.log('Conectando com usuário:', process.env.DB_USER);
-
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const authRoutes = require('./routes/auth');
-const cursoRoutes = require('./routes/cursos');
-const verifyToken = require('./middleware/verifyToken');
+const path = require('path');
 
-dotenv.config();
+const authRoutes = require('./routes/auth');
+const cursosRoutes = require('./routes/cursos'); // deixaremos pronto para o próximo passo
+
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// Rotas
-app.use('/api/auth', authRoutes);
-app.use('/api/cursos', verifyToken, cursoRoutes);
+// Rotas API
+app.use('/auth', authRoutes);
+app.use('/cursos', cursosRoutes); // será implementado no próximo passo
 
-const PORT = process.env.PORT || 5500;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+// Servir o client (opcional por enquanto)
+app.use(express.static(path.join(__dirname, '..', 'client')));
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'client', 'index.html'));
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`MentorIA rodando na porta ${PORT}`));
